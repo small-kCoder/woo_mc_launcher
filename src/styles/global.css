@@ -1,0 +1,234 @@
+/* 全局基础样式：reset、滚动条、可访问性与背景层 */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+html {
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+body {
+  /* 背景透明，由 AuroraBackground 背景层负责绘制 */
+  background: transparent;
+  color: var(--text-1);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  position: relative;
+  isolation: isolate;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+}
+
+/* 统一滚动条：细、半透明、hover 变亮 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.14);
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::selection {
+  background: rgba(106, 168, 255, 0.32);
+  color: #ffffff;
+}
+
+:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* 拖拽区 */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* 文本工具类 */
+.text-1 {
+  color: var(--text-1);
+}
+
+.text-2 {
+  color: var(--text-2);
+}
+
+.text-3 {
+  color: var(--text-3);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 极光背景层：固定全屏、纯装饰 */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bg);
+  overflow: hidden;
+  background: var(--bg-base);
+  pointer-events: none;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.72;
+}
+
+.aurora-blob--blue {
+  top: -18vh;
+  left: -12vw;
+  width: 56vw;
+  height: 56vw;
+  background: radial-gradient(circle, rgba(47, 107, 255, 0.62), transparent 68%);
+  animation: aurora-drift-a 38s ease-in-out infinite alternate;
+}
+
+.aurora-blob--violet {
+  top: 6vh;
+  right: -14vw;
+  width: 52vw;
+  height: 52vw;
+  background: radial-gradient(circle, rgba(122, 92, 255, 0.55), transparent 68%);
+  animation: aurora-drift-b 46s ease-in-out -8s infinite alternate;
+}
+
+.aurora-blob--teal {
+  bottom: -24vh;
+  left: 22vw;
+  width: 48vw;
+  height: 48vw;
+  /* [原代码]: background: radial-gradient(circle, rgba(24, 200, 184, 0.42), transparent 68%);
+     [原逻辑]: opacity: 0.72; */
+  background: radial-gradient(circle, rgba(24, 200, 184, 0.52), transparent 68%);
+  opacity: 0.78;
+  animation: aurora-drift-c 42s ease-in-out -16s infinite alternate;
+}
+
+.aurora-top {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 24%);
+}
+
+.aurora-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 58%, #000000 100%);
+  mask-image: linear-gradient(180deg, transparent 58%, #000000 100%);
+}
+
+@keyframes aurora-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(6vw, 4vh, 0) scale(1.08);
+  }
+}
+
+@keyframes aurora-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(-5vw, 6vh, 0) scale(1);
+  }
+}
+
+@keyframes aurora-drift-c {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-4vw, -5vh, 0) scale(1.1);
+  }
+}
+
+/* 减弱动效：关闭所有位移与扫光，仅保留颜色/透明度状态反馈 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .aurora-blob {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .glass-interactive:hover,
+  .glass-interactive:active {
+    transform: none !important;
+  }
+
+  .glass-sheen::before,
+  .glass-interactive:hover .glass-sheen::before,
+  .glass-sheen.is-glowing::before {
+    animation: none !important;
+    opacity: 0 !important;
+    transform: none !important;
+  }
+}

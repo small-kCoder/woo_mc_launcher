@@ -1,0 +1,183 @@
+/* 三栏布局、窗口控件与导航悬浮态 */
+
+/* 圆角外壳：透明窗口下由外壳裁切背景，避免方形白角 */
+.app-shell {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  isolation: isolate;
+}
+
+/* 极光背景改为绝对定位，跟随外壳圆角裁切 */
+.app-shell .aurora-bg {
+  position: absolute;
+  border-radius: inherit;
+}
+
+/* 顶部 34px 拖拽条：仅覆盖非交互区域，控件容器在其上方 */
+.window-drag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 34px;
+  z-index: 12;
+  -webkit-app-region: drag;
+}
+
+/* 三栏：左 168 / 中流式 / 右 272-320，外边距 14，列间距 12 */
+.app-layout {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr) clamp(272px, 26%, 320px);
+  gap: 12px;
+  height: 100%;
+  padding: 14px;
+}
+
+.app-sidebar {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 中栏纵向滚动，滚动条沿用全局样式 */
+.app-main {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 占位页与启动页共用：撑满中栏并居中 */
+.page-root {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+/* 窗口控制按钮：透明玻璃悬停，关闭按钮使用危险色 */
+.window-controls {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.window-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.window-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-1);
+}
+
+.window-btn--close:hover {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+/* 导航项：42px 高，悬停呈玻璃胶囊 */
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--glass-border);
+  color: var(--text-1);
+}
+
+.nav-item:active {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.nav-item.is-active {
+  color: var(--text-1);
+}
+
+/* 滑动高亮层由 framer-motion layoutId 复用 */
+.nav-highlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(106, 168, 255, 0.28);
+  background: linear-gradient(180deg, rgba(106, 168, 255, 0.2), rgba(106, 168, 255, 0.1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.nav-indicator {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}
+
+.nav-item-icon,
+.nav-item-label {
+  position: relative;
+  z-index: 1;
+}
+
+.nav-item-icon {
+  flex: none;
+}
+
+.nav-item-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

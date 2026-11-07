@@ -1,0 +1,11 @@
+{
+  "name": "woo-mc-version-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Woo MC 启动器服务端：版本镜像、每日清单同步、房间索引与分块上传",
+  "scripts": {
+    "start": "node index.mjs",
+    "sync": "node sync-versions.mjs"
+  }
+}
