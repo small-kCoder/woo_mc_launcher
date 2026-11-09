@@ -46,6 +46,7 @@ export function getDefaultConfig(): AppConfig {
     javaPath: null,
     accountMode: 'offline',
     memoryOptimizeOnLaunch: false,
+    modsIsolated: false,
     serverChannel: 'channel1',
     channel1Url: DEFAULT_CHANNEL1_URL,
     channel2Url: DEFAULT_CHANNEL2_URL
@@ -80,6 +81,8 @@ function mergeConfig(raw: unknown): AppConfig {
   const accountMode = isAccountMode(raw.accountMode) ? raw.accountMode : base.accountMode;
   const memoryOptimizeOnLaunch =
     typeof raw.memoryOptimizeOnLaunch === 'boolean' ? raw.memoryOptimizeOnLaunch : base.memoryOptimizeOnLaunch;
+  const modsIsolated =
+    typeof raw.modsIsolated === 'boolean' ? raw.modsIsolated : base.modsIsolated;
   // 迁移旧版 serverUrl：作为通道2（本地）地址；通道1固定为 Cloudflare 入口
   const channel1Url = readChannelUrl(raw.channel1Url, DEFAULT_CHANNEL1_URL);
   const channel2Url = readChannelUrl(
@@ -96,6 +99,7 @@ function mergeConfig(raw: unknown): AppConfig {
     javaPath,
     accountMode,
     memoryOptimizeOnLaunch,
+    modsIsolated,
     serverChannel,
     channel1Url,
     channel2Url
@@ -249,6 +253,14 @@ export function updateConfig(patch: unknown): AppConfig {
       fail('CONFIG_INVALID_MEMORY_OPTIMIZE', '内存优化开关必须为布尔值');
     }
     next.memoryOptimizeOnLaunch = value;
+  }
+
+  if ('modsIsolated' in patch) {
+    const value = patch.modsIsolated;
+    if (typeof value !== 'boolean') {
+      fail('CONFIG_INVALID_MODS_ISOLATED', '版本隔离开关必须为布尔值');
+    }
+    next.modsIsolated = value;
   }
 
   if ('serverChannel' in patch) {

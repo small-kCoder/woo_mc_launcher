@@ -1,6 +1,15 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import type { IpcRendererEvent } from 'electron';
-import type { AppConfig, JavaInfo, LauncherApi, LauncherEventChannel } from '../src/types/ipc';
+import type {
+  AppConfig,
+  FabricLoaderInfo,
+  JavaInfo,
+  LauncherApi,
+  LauncherEventChannel,
+  ModDependencyInstallResult,
+  ModImportResult,
+  ModsSnapshot
+} from '../src/types/ipc';
 
 /** 允许渲染进程订阅的事件通道白名单 */
 const ALLOWED_EVENT_CHANNELS: readonly LauncherEventChannel[] = [
@@ -72,6 +81,13 @@ const launcher: LauncherApi = {
     cancelInstall: (): Promise<void> => ipcRenderer.invoke('versions:cancel-install')
   },
 
+  fabric: {
+    loaders: (gameVersion: string): Promise<FabricLoaderInfo[]> =>
+      ipcRenderer.invoke('fabric:loaders', gameVersion),
+    install: (gameVersion: string, loaderVersion: string, source?: string): Promise<void> =>
+      ipcRenderer.invoke('fabric:install', gameVersion, loaderVersion, source)
+  },
+
   java: {
     list: (): Promise<JavaInfo[]> => ipcRenderer.invoke('java:list'),
     pick: (): Promise<JavaInfo | null> => ipcRenderer.invoke('java:pick'),
@@ -79,8 +95,15 @@ const launcher: LauncherApi = {
   },
 
   mods: {
-    list: () => ipcRenderer.invoke('mods:list'),
-    import: (paths?: string[]) => ipcRenderer.invoke('mods:import', paths)
+    list: (): Promise<ModsSnapshot> => ipcRenderer.invoke('mods:list'),
+    import: (paths?: string[]): Promise<ModImportResult> => ipcRenderer.invoke('mods:import', paths),
+    setEnabled: (fileName: string, enabled: boolean): Promise<ModsSnapshot> =>
+      ipcRenderer.invoke('mods:set-enabled', fileName, enabled),
+    remove: (fileName: string): Promise<ModsSnapshot> => ipcRenderer.invoke('mods:remove', fileName),
+    installDependencies: (modIds: string[]): Promise<ModDependencyInstallResult> =>
+      ipcRenderer.invoke('mods:install-dependencies', modIds),
+    openFolder: (): Promise<void> => ipcRenderer.invoke('mods:open-folder'),
+    pathForFile: (file: File): string => webUtils.getPathForFile(file)
   },
 
   system: {

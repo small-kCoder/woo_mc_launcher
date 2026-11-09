@@ -1,6 +1,6 @@
 {
   "name": "woo-mc-launcher",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "便携式 Minecraft 启动器",
   "main": "dist-electron/electron/main.js",

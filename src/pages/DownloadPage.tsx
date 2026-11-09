@@ -1,6 +1,8 @@
-import { Globe } from 'lucide-react';
+import { useState } from 'react';
+import { Globe, Layers } from 'lucide-react';
 import GlassPanel from '../components/ui/GlassPanel';
 import VersionBrowser from '../components/VersionBrowser';
+import FabricInstallDialog from '../components/FabricInstallDialog';
 import { useLauncher } from '../lib/useLauncher';
 
 /**
@@ -9,6 +11,7 @@ import { useLauncher } from '../lib/useLauncher';
 export default function DownloadPage(): JSX.Element {
   const { versions } = useLauncher();
   const installedCount = versions.filter((version) => version.installed).length;
+  const [fabricOpen, setFabricOpen] = useState(false);
 
   return (
     <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', padding: '14px 16px' }}>
@@ -27,7 +30,7 @@ export default function DownloadPage(): JSX.Element {
           <div style={{ flex: '1 1 220px', minWidth: 0 }}>
             <h1 style={{ fontSize: 'var(--fs-xl)', fontWeight: 600, letterSpacing: '0.02em' }}>下载中心</h1>
             <p className="text-3" style={{ marginTop: 4, fontSize: 'var(--fs-sm)' }}>
-              选择官方源或通道1 / 通道2安装 Minecraft 原版版本，默认官方源
+              选择官方源或通道1 / 通道2安装 Minecraft 原版版本，也可在线安装 Fabric
             </p>
           </div>
           <span
@@ -60,10 +63,35 @@ export default function DownloadPage(): JSX.Element {
           >
             已安装 {installedCount} 个版本
           </span>
+          <button
+            type="button"
+            className="focus-ring glass-sheen glass-interactive"
+            onClick={() => setFabricOpen(true)}
+            style={{
+              flex: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              height: 30,
+              padding: '0 14px',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid rgba(106, 168, 255, 0.4)',
+              background: 'linear-gradient(180deg, rgba(106, 168, 255, 0.3), rgba(76, 141, 255, 0.16))',
+              color: 'var(--text-1)',
+              fontFamily: 'var(--font-ui)',
+              fontSize: 'var(--fs-xs)',
+              cursor: 'pointer'
+            }}
+          >
+            <Layers size={13} strokeWidth={1.8} />
+            安装 Fabric
+          </button>
         </header>
 
         <VersionBrowser variant="page" style={{ flex: '1 1 auto', minHeight: 0 }} />
       </GlassPanel>
+
+      <FabricInstallDialog open={fabricOpen} onClose={() => setFabricOpen(false)} />
     </div>
   );
 }

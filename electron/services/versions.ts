@@ -1,14 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { VersionSummary } from '../../src/types/ipc';
 import { getConfig } from './config';
 import { fail } from './errors';
-import { logLine } from './logger';
 import { getGameDir } from './paths';
 
 /** 版本 id 允许的字符集：禁止 / \ .. 等路径穿越字符 */
 const VERSION_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
-const VERSION_TYPES = new Set(['release', 'snapshot', 'old_beta', 'old_alpha']);
 
 export interface VersionRule {
   action?: string;
@@ -28,6 +25,10 @@ export interface VersionLibrary {
   rules?: VersionRule[];
   natives?: Record<string, string>;
   extract?: { exclude?: string[] };
+  /** Fabric 等加载器的 Maven 基础地址与校验信息（不含 downloads.artifact） */
+  url?: string;
+  sha1?: string;
+  size?: number;
   downloads?: {
     artifact?: VersionDownload;
     classifiers?: Record<string, VersionDownload>;
@@ -55,6 +56,12 @@ export interface VersionJson {
   minecraftArguments?: string;
   arguments?: Record<string, unknown>;
   javaVersion?: { majorVersion?: number };
+  /** 启动器写入的加载器元数据（Fabric 等） */
+  woo?: {
+    loader?: string;
+    loaderVersion?: string;
+    gameVersion?: string;
+  };
   [key: string]: unknown;
 }
 
@@ -83,11 +90,6 @@ export function assertVersionId(value: unknown): string {
     fail('VERSION_INVALID_ID', '版本号包含非法字符');
   }
   return value;
-}
-
-/** 版本 id 是否可用于路径拼接（扫描时静默过滤，不抛错） */
-function isValidVersionId(value: string): boolean {
-  return VERSION_ID_PATTERN.test(value) && !value.includes('..');
 }
 
 export function getVersionDir(id: string): string {
@@ -147,111 +149,4 @@ export function readVersionJson(id: string): VersionJson {
   return parsed as VersionJson;
 }
 
-/** 尝试解析版本 JSON，失败返回 null（用于幂等跳过判断） */
-function tryReadVersionJson(file: string): VersionJson | null {
-  try {
-    const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      return null;
-    }
-    return parsed as VersionJson;
-  } catch {
-    return null;
-  }
-}
 
-function isFile(file: string): boolean {
-  try {
-    return fs.statSync(file).isFile();
-  } catch {
-    return false;
-  }
-}
-
-/**
- * 版本是否安装完整：扫描器只认 <id>.json 与 <id>.jar 同时存在，
- * 半装目录（只有其中之一）不视为已安装。
- */
-export function isVersionInstalled(id: string): boolean {
-  let safeId: string;
-  try {
-    safeId = assertVersionId(id);
-  } catch {
-    return false;
-  }
-  const jsonFile = getVersionJsonPath(safeId);
-  const jarFile = getVersionJarPath(safeId);
-  if (!isFile(jsonFile) || !isFile(jarFile)) {
-    return false;
-  }
-  return tryReadVersionJson(jsonFile) !== null;
-}
-
-/** 从版本 JSON 提取版本类型，未知类型归为 unknown */
-function normalizeType(value: unknown): string {
-  return typeof value === 'string' && VERSION_TYPES.has(value) ? value : 'unknown';
-}
-
-/** 扫描版本目录并返回摘要，releaseTime 倒序 */
-export function listVersions(): VersionSummary[] {
-  const gameDir = getGameDirectory();
-  const versionsDir = path.join(gameDir, 'versions');
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(versionsDir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-
-  const summaries: VersionSummary[] = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) {
-      continue;
-    }
-    if (!isValidVersionId(entry.name)) {
-      logLine(`忽略非法版本目录：${entry.name}`);
-      continue;
-    }
-    const jsonFile = path.join(versionsDir, entry.name, `${entry.name}.json`);
-    const jarFile = path.join(versionsDir, entry.name, `${entry.name}.jar`);
-    if (!isFile(jsonFile)) {
-      // 没有版本 JSON 的半装目录无法展示，但仍可在安装时被覆盖
-      continue;
-    }
-    const json = tryReadVersionJson(jsonFile);
-    if (!json) {
-      logLine(`版本文件损坏，已跳过：${entry.name}`);
-      continue;
-    }
-    if (!isFile(jarFile)) {
-      // 半装目录（缺少 jar）不进入版本列表，但仍可在安装时被覆盖
-      logLine(`忽略半装版本目录：${entry.name}`);
-      continue;
-    }
-    let mtime: Date;
-    try {
-      mtime = fs.statSync(jsonFile).mtime;
-    } catch {
-      mtime = new Date(0);
-    }
-    const releaseTimeRaw = json.releaseTime;
-    const releaseTime =
-      typeof releaseTimeRaw === 'string' && Number.isFinite(Date.parse(releaseTimeRaw))
-        ? new Date(releaseTimeRaw).toISOString()
-        : mtime.toISOString();
-    const javaMajor = json.javaVersion?.majorVersion;
-    const summary: VersionSummary = {
-      id: entry.name,
-      type: normalizeType(json.type),
-      releaseTime,
-      installed: true
-    };
-    if (typeof javaMajor === 'number' && Number.isInteger(javaMajor) && javaMajor > 0) {
-      summary.javaMajor = javaMajor;
-    }
-    summaries.push(summary);
-  }
-
-  summaries.sort((a, b) => Date.parse(b.releaseTime) - Date.parse(a.releaseTime));
-  return summaries;
-}

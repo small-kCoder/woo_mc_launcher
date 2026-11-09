@@ -16,7 +16,8 @@ import { buildLaunchPlan, type LaunchAccount, type LaunchPlan } from './launchPl
 import { emitGameLine, emitLaunchPhase } from './gameEvents';
 import { watchGameWindow } from './gameWindow';
 import { getLogsDir } from './paths';
-import { assertVersionId, getGameDirectory, isVersionInstalled, readVersionJson } from './versions';
+import { assertVersionId, getGameDirectory } from './versions';
+import { isVersionInstalled, resolveVersionChain } from './versionChain';
 
 /** 进入游戏后常见的启动日志标志 */
 const RUNNING_MARKER = /Setting user:|Sound engine started|Started render thread|Backend library/;
@@ -485,7 +486,7 @@ function finishAfterExit(session: LaunchSession, code: number | null, signal: No
 
 function spawnGame(session: LaunchSession, plan: LaunchPlan, account: LaunchAccount): void {
   const secrets = [account.accessToken];
-  fs.mkdirSync(path.join(plan.cwd, 'versions', session.versionId, 'natives'), { recursive: true });
+  fs.mkdirSync(plan.nativesDir, { recursive: true });
   session.log.writeLine(`[启动器] 工作目录：${plan.cwd}`);
   session.log.writeLine(`[启动器] 命令行：${redactArgs(plan.args, secrets).join(' ')}`);
 
@@ -568,7 +569,8 @@ async function runPipeline(session: LaunchSession, initialAccount: StoredAccount
     const account = await prepareAccount(session, initialAccount);
     throwIfCancelled(session);
 
-    const versionJson = readVersionJson(session.versionId);
+    const resolved = resolveVersionChain(session.versionId);
+    const versionJson = resolved.json;
     const requiredMajor = versionJson.javaVersion?.majorVersion;
     if (typeof requiredMajor === 'number' && Number.isInteger(requiredMajor) && session.java.major < requiredMajor) {
       const warning = `Java ${session.java.version} 低于版本建议的 Java ${requiredMajor}，仍将尝试启动`;
@@ -585,7 +587,9 @@ async function runPipeline(session: LaunchSession, initialAccount: StoredAccount
       account: launchAccount,
       memoryMb,
       launcherName: 'WooLauncher',
-      launcherVersion: app.getVersion()
+      launcherVersion: app.getVersion(),
+      clientJarPath: resolved.clientJarPath,
+      nativesDir: resolved.nativesDir
     });
 
     const launchConfig = getConfig();
@@ -629,7 +633,7 @@ async function runPipeline(session: LaunchSession, initialAccount: StoredAccount
 
     let inDownloading = false;
     await ensureVersionDependencies(
-      session.versionId,
+      resolved.rootId,
       (progress: InstallProgress) => {
         if (session.finished || session.cancelRequested) {
           return;

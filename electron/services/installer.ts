@@ -21,12 +21,14 @@ import {
   getGameDirectory,
   getVersionDir,
   getVersionJsonPath,
-  listVersions,
   readVersionJson,
   type VersionDownload,
   type VersionJson,
   type VersionLibrary
 } from './versions';
+import { isVersionInstalled, listVersions } from './versionChain';
+import { fabricVersionId, fetchFabricProfile } from './fabric';
+import { mavenDownloadUrl, mavenRelativePath, parseMavenName } from './maven';
 
 /** 官方清单地址，主地址失败时回退到旧域名 */
 const MANIFEST_URLS = [
@@ -941,6 +943,161 @@ async function runInstall(
     `${new Date().toISOString()}\n`,
     'utf8'
   );
+}
+
+/* ------------------------------ Fabric 安装 ------------------------------ */
+
+/** Fabric profile 依赖转换为下载任务：优先 downloads.artifact，否则按 Maven 坐标推导 */
+function buildFabricLibraryTasks(json: VersionJson, gameDir: string, osArch: string): DownloadTask[] {
+  const libraries = Array.isArray(json.libraries)
+    ? json.libraries.filter((item): item is VersionLibrary => isPlainObject(item))
+    : [];
+  const tasks: DownloadTask[] = [];
+  for (const library of libraries) {
+    if (!ruleAllows(library.rules, osArch)) {
+      continue;
+    }
+    const artifact = library.downloads?.artifact;
+    if (artifact && typeof artifact.url === 'string' && artifact.url.length > 0) {
+      const dest = resolveLibraryPath(gameDir, artifact.path);
+      if (dest) {
+        tasks.push({ url: artifact.url, dest, size: artifact.size, sha1: artifact.sha1 });
+      }
+      continue;
+    }
+    if (
+      typeof library.name !== 'string' ||
+      typeof library.url !== 'string' ||
+      library.url.length === 0
+    ) {
+      logLine(`忽略无法解析的 Fabric 依赖：${library.name ?? '未知'}`);
+      continue;
+    }
+    const coordinate = parseMavenName(library.name);
+    if (!coordinate) {
+      logLine(`忽略非法 Maven 坐标：${library.name}`);
+      continue;
+    }
+    const relative = mavenRelativePath(coordinate);
+    const dest = assertInsideGameDir(
+      path.join(gameDir, 'libraries', ...relative.split('/')),
+      gameDir
+    );
+    tasks.push({
+      url: mavenDownloadUrl(library.url, coordinate),
+      dest,
+      size: library.size,
+      sha1: library.sha1
+    });
+  }
+  return tasks;
+}
+
+async function runFabricInstall(
+  versionId: string,
+  gameVersion: string,
+  loaderVersion: string,
+  tracker: ProgressTracker,
+  signal: AbortSignal | undefined,
+  source: DownloadSource
+): Promise<void> {
+  const gameDir = getGameDirectory();
+  if (!isVersionInstalled(gameVersion)) {
+    logLine(`Fabric 安装：基础版本 ${gameVersion} 未安装，先补全原版`);
+    tracker.setTask('补全原版');
+    await runInstall(gameVersion, tracker, signal, source);
+  }
+  throwIfCancelled(signal);
+
+  tracker.setTask('获取 Fabric 信息');
+  const profile = await fetchFabricProfile(gameVersion, loaderVersion);
+  throwIfCancelled(signal);
+
+  const json: VersionJson = {
+    ...profile,
+    id: versionId,
+    inheritsFrom: gameVersion,
+    releaseTime:
+      typeof profile.releaseTime === 'string' ? profile.releaseTime : new Date().toISOString(),
+    type: 'release',
+    woo: { loader: 'fabric', loaderVersion, gameVersion }
+  };
+
+  const versionDir = assertInsideGameDir(getVersionDir(versionId), gameDir);
+  await fsp.mkdir(versionDir, { recursive: true });
+
+  const tasks = buildFabricLibraryTasks(json, gameDir, getCurrentArch());
+  tracker.addTotal(uniqueSize(tasks));
+  tracker.setTask('下载 Fabric 依赖');
+  const result = await runTasks(tasks, tracker, signal);
+  logLine(`Fabric 依赖：${result.downloaded} 个下载、${result.skipped} 个跳过`);
+  throwIfCancelled(signal);
+
+  const jsonPath = getVersionJsonPath(versionId);
+  const tempPath = `${jsonPath}.tmp`;
+  await fsp.writeFile(tempPath, `${JSON.stringify(json, null, 2)}\n`, 'utf8');
+  await fsp.rename(tempPath, jsonPath);
+  await fsp.writeFile(path.join(versionDir, '.installed'), `${new Date().toISOString()}\n`, 'utf8');
+  tracker.setTask(TASK_TEXT.done);
+}
+
+async function executeFabric(
+  versionId: string,
+  gameVersion: string,
+  loaderVersion: string,
+  onProgress: ((progress: InstallProgress) => void) | undefined,
+  signal: AbortSignal | undefined,
+  source: DownloadSource
+): Promise<void> {
+  const tracker = new ProgressTracker(versionId, onProgress);
+  const startedAt = Date.now();
+  logLine(`安装 Fabric：${versionId}（${sourceLabel(source)}）`);
+  try {
+    await runFabricInstall(versionId, gameVersion, loaderVersion, tracker, signal, source);
+    tracker.complete();
+    logLine(
+      `Fabric 安装完成：${versionId}，耗时 ${((Date.now() - startedAt) / 1000).toFixed(1)} 秒`
+    );
+  } catch (error) {
+    const cancelled = signal?.aborted === true || isDownloadCancelled(error);
+    if (cancelled) {
+      logLine(`Fabric 安装已取消：${versionId}`);
+      tracker.interrupt(undefined, true);
+      throw new AppError('INSTALL_CANCELLED', '安装已取消');
+    }
+    const message = error instanceof Error && error.message ? error.message : '安装失败';
+    const code = error instanceof AppError ? error.code : 'INSTALL_FAILED';
+    logLine(`Fabric 安装失败：${versionId}（${message}）`);
+    tracker.interrupt({ code, message });
+    throw error instanceof AppError ? error : new AppError(code, message);
+  }
+}
+
+/** 后台启动 Fabric 安装：原版缺失时自动补齐，进度与取消沿用现有安装通道 */
+export function startFabricInstall(
+  gameVersion: string,
+  loaderVersion: string,
+  source: DownloadSource = 'official'
+): void {
+  const versionId = fabricVersionId(gameVersion, loaderVersion);
+  if (activeInstall) {
+    fail('INSTALL_IN_PROGRESS', '正在安装中，请等待当前安装完成');
+  }
+  const controller = new AbortController();
+  activeInstall = { id: versionId, controller };
+  const onProgress = (progress: InstallProgress): void => emitInstallProgress(progress);
+
+  void executeFabric(versionId, gameVersion, loaderVersion, onProgress, controller.signal, source)
+    .catch(() => {
+      // 失败/取消已通过 install:progress 推送
+    })
+    .finally(() => {
+      if (activeInstall?.controller === controller) {
+        activeInstall = null;
+      }
+      emitVersionsChanged();
+      logLine(`Fabric 安装流程结束：${versionId}`);
+    });
 }
 
 /* ------------------------------ 对外接口 ------------------------------ */

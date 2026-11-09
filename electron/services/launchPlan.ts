@@ -2,6 +2,7 @@ import path from 'node:path';
 import type { VersionJson, VersionLibrary, VersionRule } from './versions';
 import { fail } from './errors';
 import { getCurrentArch, ruleAllows } from './libraryRules';
+import { mavenRelativePath, parseMavenName } from './maven';
 
 /** 版本 id 规则与 versions.ts 保持一致，避免路径穿越 */
 const VERSION_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
@@ -32,6 +33,10 @@ export interface BuildLaunchPlanOptions {
   memoryMb: number;
   launcherName?: string;
   launcherVersion?: string;
+  /** 继承版本使用根原版的 jar；缺省为当前版本目录下的 <id>.jar */
+  clientJarPath?: string;
+  /** 继承版本使用根原版的 natives；缺省为当前版本目录下的 natives */
+  nativesDir?: string;
 }
 
 export interface LaunchPlan {
@@ -39,6 +44,7 @@ export interface LaunchPlan {
   args: string[];
   cwd: string;
   classpath: string;
+  nativesDir: string;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -52,13 +58,24 @@ function requireText(value: unknown, code: string, message: string): string {
   return value;
 }
 
-/** 解析库文件相对路径，拒绝越界片段；失败返回 null */
+/**
+ * 解析库文件相对路径，拒绝越界片段；失败返回 null。
+ * 优先使用 downloads.artifact.path；Fabric 等加载器只有 Maven 坐标时按坐标推导。
+ */
 function resolveArtifactPath(gameDir: string, library: VersionLibrary): string | null {
   const artifact = library.downloads?.artifact;
-  if (!artifact || typeof artifact.path !== 'string' || artifact.path.length === 0) {
+  let relative: string | undefined =
+    typeof artifact?.path === 'string' && artifact.path.length > 0 ? artifact.path : undefined;
+  if (!relative && typeof library.name === 'string') {
+    const coordinate = parseMavenName(library.name);
+    if (coordinate) {
+      relative = mavenRelativePath(coordinate);
+    }
+  }
+  if (!relative) {
     return null;
   }
-  const segments = artifact.path.replace(/\\/g, '/').split('/');
+  const segments = relative.replace(/\\/g, '/').split('/');
   if (segments.some((segment) => segment.length === 0 || segment === '.' || segment === '..')) {
     return null;
   }
@@ -178,10 +195,10 @@ export function buildLaunchPlan(options: BuildLaunchPlanOptions): LaunchPlan {
 
   /* ------------------------------ 路径与 classpath ------------------------------ */
   const versionDir = path.join(gameDir, 'versions', versionId);
-  const nativesDir = path.join(versionDir, 'natives');
+  const nativesDir = options.nativesDir ?? path.join(versionDir, 'natives');
   const librariesDir = path.join(gameDir, 'libraries');
   const assetsDir = path.join(gameDir, 'assets');
-  const clientJar = path.join(versionDir, `${versionId}.jar`);
+  const clientJar = options.clientJarPath ?? path.join(versionDir, `${versionId}.jar`);
 
   const libraries: VersionLibrary[] = Array.isArray(json.libraries)
     ? json.libraries.filter((item): item is VersionLibrary => isPlainObject(item))
@@ -291,7 +308,7 @@ export function buildLaunchPlan(options: BuildLaunchPlanOptions): LaunchPlan {
     }
 
     args.push(...jvmArgs, mainClass, ...gameArgs);
-    return { javaPath, args, cwd: gameDir, classpath };
+    return { javaPath, args, cwd: gameDir, classpath, nativesDir };
   }
 
   const template =
@@ -303,5 +320,5 @@ export function buildLaunchPlan(options: BuildLaunchPlanOptions): LaunchPlan {
   }
   const legacyArgs = buildLegacyArguments(template, replacements);
   args.push('-cp', classpath, mainClass, ...legacyArgs);
-  return { javaPath, args, cwd: gameDir, classpath };
+  return { javaPath, args, cwd: gameDir, classpath, nativesDir };
 }

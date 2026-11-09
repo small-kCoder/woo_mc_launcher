@@ -12,17 +12,32 @@ import {
 import { cancelMicrosoftLogin } from '../services/auth/microsoft';
 import { getConfig, updateConfig } from '../services/config';
 import { fail } from '../services/errors';
-import { cancelInstall, fetchManifest, startInstall, type ManifestKind } from '../services/installer';
+import {
+  cancelInstall,
+  fetchManifest,
+  startFabricInstall,
+  startInstall,
+  type ManifestKind
+} from '../services/installer';
+import { fetchFabricLoaders } from '../services/fabric';
 import { listDetectedJavas, resetJavaResolution, resolveJava, setJavaPath } from '../services/java';
 import { cancelLaunch, emitLaunchFailureState, startLaunch } from '../services/launcher';
 import { getRecentLines, logLine } from '../services/logger';
 import { optimizeMemory } from '../services/memoryOptimizer';
-import { importMods, listMods } from '../services/mods';
+import {
+  deleteMod,
+  getModsSnapshot,
+  importMods,
+  openModsDirectory,
+  setModEnabled
+} from '../services/mods';
+import { installMissingModDependencies } from '../services/modrinth';
 import { getLogsDir } from '../services/paths';
 import { checkServer } from '../services/serverCheck';
 import { getMultiplayerState, joinRoom, leaveMultiplayer, startHost } from '../services/multiplayer';
 import { getSystemStats } from '../services/systemStats';
-import { assertVersionId, isVersionInstalled, listVersions } from '../services/versions';
+import { assertVersionId } from '../services/versions';
+import { isVersionInstalled, listVersions } from '../services/versionChain';
 
 /** 日志尾部读取的行数范围 */
 const LOG_TAIL_MIN = 1;
@@ -227,9 +242,32 @@ function registerServerIpc(): void {
   });
 }
 
-/** 模组：列出已导入的 .jar，并通过文件选择对话框导入 */
+/** 模组：列表、启用/禁用、删除、打开目录与导入 */
 function registerModsIpc(): void {
-  safeHandle('mods:list', () => listMods());
+  safeHandle('mods:list', () => getModsSnapshot());
+
+  safeHandle('mods:set-enabled', (_event, fileName, enabled) => {
+    if (typeof fileName !== 'string' || fileName.length === 0 || typeof enabled !== 'boolean') {
+      fail('MOD_INVALID_NAME', '模组参数不正确');
+    }
+    return setModEnabled(fileName, enabled);
+  });
+
+  safeHandle('mods:remove', (_event, fileName) => {
+    if (typeof fileName !== 'string' || fileName.length === 0) {
+      fail('MOD_INVALID_NAME', '模组参数不正确');
+    }
+    return deleteMod(fileName);
+  });
+
+  safeHandle('mods:install-dependencies', (_event, modIds) => {
+    if (!Array.isArray(modIds) || modIds.some((item) => typeof item !== 'string')) {
+      fail('MOD_DEP_EMPTY', '依赖参数不正确');
+    }
+    return installMissingModDependencies(modIds as string[]);
+  });
+
+  safeHandle('mods:open-folder', () => openModsDirectory());
 
   safeHandle('mods:import', async (event, paths) => {
     // 传入路径时直接导入（拖拽/联调复用）；否则打开系统文件选择框
@@ -301,6 +339,25 @@ function registerVersionIpc(): void {
   });
 
   safeHandle('versions:cancel-install', () => cancelInstall());
+
+  safeHandle('fabric:loaders', (_event, gameVersion) => {
+    if (typeof gameVersion !== 'string' || gameVersion.length === 0 || gameVersion.length > 64) {
+      fail('FABRIC_INVALID_VERSION', 'Minecraft 版本不合法');
+    }
+    return fetchFabricLoaders(gameVersion);
+  });
+
+  safeHandle('fabric:install', (_event, gameVersion, loaderVersion, source) => {
+    if (
+      typeof gameVersion !== 'string' ||
+      typeof loaderVersion !== 'string' ||
+      gameVersion.length === 0 ||
+      loaderVersion.length === 0
+    ) {
+      fail('FABRIC_INVALID_VERSION', 'Fabric 安装参数不合法');
+    }
+    startFabricInstall(gameVersion, loaderVersion, parseDownloadSource(source));
+  });
 }
 
 /** 启动流水线 IPC：参数校验后立即返回，状态与日志通过事件推送 */
