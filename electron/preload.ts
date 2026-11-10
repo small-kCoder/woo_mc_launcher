@@ -8,7 +8,9 @@ import type {
   LauncherEventChannel,
   ModDependencyInstallResult,
   ModImportResult,
-  ModsSnapshot
+  ModsSnapshot,
+  ModUpdatesResult,
+  OnlineModSearchResult
 } from '../src/types/ipc';
 
 /** 允许渲染进程订阅的事件通道白名单 */
@@ -102,6 +104,13 @@ const launcher: LauncherApi = {
     remove: (fileName: string): Promise<ModsSnapshot> => ipcRenderer.invoke('mods:remove', fileName),
     installDependencies: (modIds: string[]): Promise<ModDependencyInstallResult> =>
       ipcRenderer.invoke('mods:install-dependencies', modIds),
+    searchOnline: (query: string, offset?: number): Promise<OnlineModSearchResult> =>
+      ipcRenderer.invoke('mods:search-online', query, offset),
+    installOnline: (projectId: string): Promise<ModDependencyInstallResult> =>
+      ipcRenderer.invoke('mods:install-online', projectId),
+    checkUpdates: (): Promise<ModUpdatesResult> => ipcRenderer.invoke('mods:check-updates'),
+    updateMod: (fileName: string): Promise<ModDependencyInstallResult> =>
+      ipcRenderer.invoke('mods:update', fileName),
     openFolder: (): Promise<void> => ipcRenderer.invoke('mods:open-folder'),
     pathForFile: (file: File): string => webUtils.getPathForFile(file)
   },

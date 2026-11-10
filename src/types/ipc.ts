@@ -154,6 +154,44 @@ export interface ModDependencyInstallResult {
   failed: Array<{ id: string; message: string }>;
 }
 
+/** 在线模组搜索结果条目 */
+export interface OnlineModHit {
+  projectId: string;
+  slug: string | null;
+  title: string;
+  description: string;
+  author: string;
+  downloads: number;
+  follows: number;
+  iconUrl: string | null;
+  categories: string[];
+  /** 本地已安装版本；未安装为 null */
+  installedVersion: string | null;
+}
+
+export interface OnlineModSearchResult {
+  hits: OnlineModHit[];
+  total: number;
+  offset: number;
+  /** 当前用于筛选的游戏版本 */
+  gameVersion: string;
+}
+
+/** 可更新的模组 */
+export interface ModUpdateInfo {
+  fileName: string;
+  baseFileName: string;
+  title: string;
+  projectId: string;
+  installedVersion: string;
+  latestVersion: string;
+}
+
+export interface ModUpdatesResult {
+  updates: ModUpdateInfo[];
+  gameVersion: string;
+}
+
 /** 模组列表快照：包含当前目录与隔离状态 */
 export interface ModsSnapshot {
   directory: string;
@@ -289,6 +327,14 @@ export interface LauncherApi {
     remove: (fileName: string) => Promise<ModsSnapshot>;
     /** 从 Modrinth 一键安装缺失依赖（含必需前置） */
     installDependencies: (modIds: string[]) => Promise<ModDependencyInstallResult>;
+    /** 在线搜索模组，自动限定当前版本与 Fabric */
+    searchOnline: (query: string, offset?: number) => Promise<OnlineModSearchResult>;
+    /** 安装在线模组的最新兼容版本 */
+    installOnline: (projectId: string) => Promise<ModDependencyInstallResult>;
+    /** 检查通过启动器安装的模组更新 */
+    checkUpdates: () => Promise<ModUpdatesResult>;
+    /** 更新指定模组到最新兼容版本 */
+    updateMod: (fileName: string) => Promise<ModDependencyInstallResult>;
     openFolder: () => Promise<void>;
     /** 拖拽导入时把 File 转换为本地路径 */
     pathForFile: (file: File) => string;

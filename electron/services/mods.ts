@@ -14,6 +14,7 @@ import { fail } from './errors';
 import { logLine } from './logger';
 import { getGameDirectory, getVersionDir } from './versions';
 import { readZipEntryText } from './zipText';
+import { removeInstallRecord } from './modStore';
 
 /** 单次导入的文件数量与单文件大小上限 */
 const MAX_IMPORT_FILES = 50;
@@ -348,6 +349,7 @@ export async function deleteMod(fileName: string): Promise<ModsSnapshot> {
       `删除模组失败：${error instanceof Error ? error.message : '未知错误'}`
     );
   }
+  removeInstallRecord(target.fileName);
   logLine(`模组已移入回收站：${target.fileName}`);
   return getModsSnapshot();
 }

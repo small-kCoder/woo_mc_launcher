@@ -4,6 +4,7 @@ import {
   Download,
   FileArchive,
   FolderOpen,
+  Globe,
   Package,
   RefreshCw,
   Search,
@@ -13,6 +14,7 @@ import {
 import Dialog from '../components/Dialog';
 import GlassPanel from '../components/ui/GlassPanel';
 import ModDetailDialog from '../components/ModDetailDialog';
+import OnlineModsDialog from '../components/OnlineModsDialog';
 import SegmentedControl from '../components/SegmentedControl';
 import { showToast } from '../lib/toast';
 import { toUserMessage } from '../lib/errorText';
@@ -62,6 +64,7 @@ export default function ModsPage(): JSX.Element {
   const [deleteTarget, setDeleteTarget] = useState<ModFile | null>(null);
   const [isolationPending, setIsolationPending] = useState(false);
   const [installingDeps, setInstallingDeps] = useState(false);
+  const [onlineOpen, setOnlineOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dragDepth = useRef(0);
 
@@ -727,6 +730,30 @@ export default function ModsPage(): JSX.Element {
 
           <button
             type="button"
+            className="focus-ring glass-interactive"
+            onClick={() => setOnlineOpen(true)}
+            style={{
+              flex: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              height: 30,
+              padding: '0 14px',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--glass-border)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: 'var(--text-1)',
+              fontFamily: 'var(--font-ui)',
+              fontSize: 'var(--fs-xs)',
+              cursor: 'pointer'
+            }}
+          >
+            <Globe size={13} strokeWidth={1.8} />
+            在线模组
+          </button>
+
+          <button
+            type="button"
             className="focus-ring glass-sheen glass-interactive"
             disabled={importing || loading}
             onClick={() => void runImport()}
@@ -882,6 +909,12 @@ export default function ModsPage(): JSX.Element {
         installing={installingDeps}
         onInstallMissing={(ids) => void handleInstallDependencies(ids)}
         onClose={() => setDetailMod(null)}
+      />
+
+      <OnlineModsDialog
+        open={onlineOpen}
+        onClose={() => setOnlineOpen(false)}
+        onChanged={() => void loadMods()}
       />
 
       <Dialog

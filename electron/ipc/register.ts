@@ -31,7 +31,13 @@ import {
   openModsDirectory,
   setModEnabled
 } from '../services/mods';
-import { installMissingModDependencies } from '../services/modrinth';
+import {
+  checkModUpdates,
+  installMissingModDependencies,
+  installOnlineMod,
+  searchOnlineMods,
+  updateOnlineMod
+} from '../services/modrinth';
 import { getLogsDir } from '../services/paths';
 import { checkServer } from '../services/serverCheck';
 import { getMultiplayerState, joinRoom, leaveMultiplayer, startHost } from '../services/multiplayer';
@@ -265,6 +271,28 @@ function registerModsIpc(): void {
       fail('MOD_DEP_EMPTY', '依赖参数不正确');
     }
     return installMissingModDependencies(modIds as string[]);
+  });
+
+  safeHandle('mods:search-online', (_event, query, offset) => {
+    const keyword = typeof query === 'string' ? query : '';
+    const pageOffset = typeof offset === 'number' && Number.isFinite(offset) ? offset : 0;
+    return searchOnlineMods(keyword, pageOffset);
+  });
+
+  safeHandle('mods:install-online', (_event, projectId) => {
+    if (typeof projectId !== 'string' || projectId.length === 0) {
+      fail('MOD_DEP_EMPTY', '模组标识不正确');
+    }
+    return installOnlineMod(projectId);
+  });
+
+  safeHandle('mods:check-updates', () => checkModUpdates());
+
+  safeHandle('mods:update', (_event, fileName) => {
+    if (typeof fileName !== 'string' || fileName.length === 0) {
+      fail('MOD_INVALID_NAME', '模组文件名不合法');
+    }
+    return updateOnlineMod(fileName);
   });
 
   safeHandle('mods:open-folder', () => openModsDirectory());
