@@ -13,7 +13,12 @@ import { getConfig } from './config';
 import { fail } from './errors';
 import { logLine } from './logger';
 import { getGameDirectory, getVersionDir } from './versions';
-import { readZipEntryText } from './zipText';
+import {
+  listZipEntryNames,
+  readZipEntry,
+  readZipEntryText,
+  readZipEntryTextFromBuffer
+} from './zipText';
 import { removeInstallRecord } from './modStore';
 
 /** 单次导入的文件数量与单文件大小上限 */
@@ -22,6 +27,11 @@ const MAX_MOD_BYTES = 512 * 1024 * 1024;
 const METADATA_CACHE_LIMIT = 500;
 /** 这些依赖由游戏/加载器/Java 提供，不参与缺失检查 */
 const BUILTIN_DEPENDENCIES = new Set(['minecraft', 'fabricloader', 'java']);
+/** 嵌套模组（Fabric 的 jar-in-jar）扫描限制 */
+const NESTED_JAR_PREFIX = 'META-INF/jars/';
+const MAX_NESTED_JARS = 40;
+const MAX_NESTED_JAR_BYTES = 16 * 1024 * 1024;
+const MAX_METADATA_BYTES = 512 * 1024;
 
 interface ModsContext {
   directory: string;
@@ -179,14 +189,45 @@ function parseMetadata(text: string): RawMetadata | null {
   }
 }
 
+/**
+ * 扫描 jar 内置的嵌套模组（META-INF/jars/*.jar）的 id 与 provides。
+ * Xaero's Minimap、Iris 等会把前置或 Fabric API 模块打包在内部，用于消除误报。
+ */
+function readNestedModuleIds(fullPath: string): string[] {
+  const names = listZipEntryNames(fullPath, NESTED_JAR_PREFIX, '.jar', MAX_NESTED_JARS);
+  const ids: string[] = [];
+  for (const name of names) {
+    const nested = readZipEntry(fullPath, name, MAX_NESTED_JAR_BYTES);
+    if (!nested) {
+      continue;
+    }
+    const text = readZipEntryTextFromBuffer(nested, 'fabric.mod.json', MAX_METADATA_BYTES);
+    if (!text) {
+      continue;
+    }
+    const parsed = parseMetadata(text);
+    if (!parsed) {
+      continue;
+    }
+    ids.push(parsed.id, ...parsed.provides);
+  }
+  return ids;
+}
+
 function readRawMetadata(fullPath: string, stat: fs.Stats): RawMetadata | null {
   const key = `${fullPath}|${Math.floor(stat.mtimeMs)}|${stat.size}`;
   const cached = metadataCache.get(key);
   if (cached) {
     return cached.raw;
   }
-  const text = readZipEntryText(fullPath, 'fabric.mod.json');
+  const text = readZipEntryText(fullPath, 'fabric.mod.json', MAX_METADATA_BYTES);
   const raw = text ? parseMetadata(text) : null;
+  if (raw) {
+    const nested = readNestedModuleIds(fullPath);
+    if (nested.length > 0) {
+      raw.provides = Array.from(new Set([...raw.provides, ...nested]));
+    }
+  }
   if (metadataCache.size >= METADATA_CACHE_LIMIT) {
     metadataCache.clear();
   }

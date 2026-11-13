@@ -9,6 +9,8 @@ interface ModDetailDialogProps {
   directory: string | null;
   /** 正在安装缺失依赖 */
   installing?: boolean;
+  /** 上次一键安装失败的原因 */
+  installError?: string;
   onInstallMissing?: (modIds: string[]) => void;
   onClose: () => void;
 }
@@ -32,6 +34,7 @@ export default function ModDetailDialog({
   mod,
   directory,
   installing = false,
+  installError = '',
   onInstallMissing,
   onClose
 }: ModDetailDialogProps): JSX.Element {
@@ -172,6 +175,11 @@ export default function ModDetailDialog({
                 <span>
                   缺少依赖：{metadata.missing.join('、')}。可使用一键安装从 Modrinth 下载兼容当前版本的模组。
                 </span>
+                {installError && (
+                  <span style={{ color: 'var(--danger)', overflowWrap: 'anywhere' }}>
+                    安装未完成：{installError}
+                  </span>
+                )}
                 {onInstallMissing && (
                   <button
                     type="button"
@@ -179,7 +187,8 @@ export default function ModDetailDialog({
                     disabled={installing}
                     onClick={() => onInstallMissing(metadata.missing)}
                     style={{
-                      alignSelf: 'flex-start',
+                      alignSelf: 'stretch',
+                      justifyContent: 'center',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6,

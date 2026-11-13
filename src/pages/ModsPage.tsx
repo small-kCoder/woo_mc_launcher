@@ -64,6 +64,7 @@ export default function ModsPage(): JSX.Element {
   const [deleteTarget, setDeleteTarget] = useState<ModFile | null>(null);
   const [isolationPending, setIsolationPending] = useState(false);
   const [installingDeps, setInstallingDeps] = useState(false);
+  const [depError, setDepError] = useState('');
   const [onlineOpen, setOnlineOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dragDepth = useRef(0);
@@ -180,6 +181,7 @@ export default function ModsPage(): JSX.Element {
       return;
     }
     setInstallingDeps(true);
+    setDepError('');
     try {
       const result = await api.mods.installDependencies(ids);
       if (result.installed.length > 0) {
@@ -192,6 +194,11 @@ export default function ModsPage(): JSX.Element {
         });
       }
       if (result.failed.length > 0) {
+        const detail = result.failed
+          .slice(0, 3)
+          .map((item) => `${item.id}：${item.message}`)
+          .join('；');
+        setDepError(detail);
         showToast({
           type: 'info',
           message: `${result.failed.length} 个依赖未能安装：${result.failed
@@ -206,7 +213,9 @@ export default function ModsPage(): JSX.Element {
         previous ? next.mods.find((item) => item.fileName === previous.fileName) ?? null : null
       );
     } catch (error) {
-      showToast({ type: 'error', message: toUserMessage(error, '安装依赖失败') });
+      const message = toUserMessage(error, '安装依赖失败');
+      setDepError(message);
+      showToast({ type: 'error', message });
     } finally {
       setInstallingDeps(false);
     }
@@ -907,6 +916,7 @@ export default function ModsPage(): JSX.Element {
         mod={detailMod}
         directory={snapshot?.directory ?? null}
         installing={installingDeps}
+        installError={depError}
         onInstallMissing={(ids) => void handleInstallDependencies(ids)}
         onClose={() => setDetailMod(null)}
       />
