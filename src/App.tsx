@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { MotionConfig, motion } from 'framer-motion';
 import AuroraBackground from './components/AuroraBackground';
 import MultiplayerPanel from './components/MultiplayerPanel';
 import ServerConnectionGuard from './components/ServerConnectionGuard';
@@ -31,28 +31,29 @@ export default function App(): JSX.Element {
           <Sidebar activeAccount={activeAccount} activePage={activePage} onNavigate={setActivePage} />
 
           <main className="app-main">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={activePage}
-                variants={fadeSlide}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                /* [原代码]: style={{ flex: '1 0 auto', display: 'flex', flexDirection: 'column' }} */
-                /* 中栏页面需要可收缩，否则固定高度的页面（如下载页）会溢出并隐藏底部操作区 */
-                style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}
-              >
-                {activePage === 'launch' ? (
-                  <LaunchPage />
-                ) : activePage === 'download' ? (
-                  <DownloadPage />
-                ) : activePage === 'mod' ? (
-                  <ModsPage />
-                ) : (
-                  <PlaceholderPage page={activePage} />
-                )}
-              </motion.div>
-            </AnimatePresence>
+            {/*
+             * [原代码]: <AnimatePresence mode="wait"> 包裹带 exit 的 motion.div
+             * 旧方案的 wait 模式在页面内含 layoutId 动画（分段控件）时可能永久等待退场，
+             * 导致导航高亮已切换、中栏仍停留在上一页。改为仅入场动画，切换必定生效。
+             */}
+            <motion.div
+              key={activePage}
+              variants={fadeSlide}
+              initial="initial"
+              animate="animate"
+              /* 中栏页面需要可收缩，否则固定高度的页面（如下载页）会溢出并隐藏底部操作区 */
+              style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}
+            >
+              {activePage === 'launch' ? (
+                <LaunchPage />
+              ) : activePage === 'download' ? (
+                <DownloadPage />
+              ) : activePage === 'mod' ? (
+                <ModsPage />
+              ) : (
+                <PlaceholderPage page={activePage} />
+              )}
+            </motion.div>
           </main>
 
           <aside className="app-right">
