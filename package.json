@@ -1,6 +1,6 @@
 {
   "name": "woo-mc-launcher",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "private": true,
   "description": "便携式 Minecraft 启动器",
   "main": "dist-electron/electron/main.js",
@@ -12,6 +12,7 @@
     "build:renderer": "vite build",
     "build": "npm run build:electron && npm run build:renderer",
     "start": "npm run build && electron .",
+    "site": "node site/serve.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit"
   },
   "dependencies": {
@@ -47,6 +48,7 @@
       "package.json"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "dir"
       ]
