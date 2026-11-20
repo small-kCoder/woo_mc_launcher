@@ -30,7 +30,7 @@ export default function DownloadPage(): JSX.Element {
           <div style={{ flex: '1 1 220px', minWidth: 0 }}>
             <h1 style={{ fontSize: 'var(--fs-xl)', fontWeight: 600, letterSpacing: '0.02em' }}>下载中心</h1>
             <p className="text-3" style={{ marginTop: 4, fontSize: 'var(--fs-sm)' }}>
-              选择官方源或通道1 / 通道2安装 Minecraft 原版版本，也可在线安装 Fabric
+              从 Mojang 官方源安装 Minecraft 原版版本，也可在线安装 Fabric
             </p>
           </div>
           <span
@@ -48,7 +48,7 @@ export default function DownloadPage(): JSX.Element {
             }}
           >
             <Globe size={12} strokeWidth={1.8} aria-hidden="true" />
-            官方 / 通道1 / 通道2
+            Mojang 官方源
           </span>
           <span
             className="text-3"

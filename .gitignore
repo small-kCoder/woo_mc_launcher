@@ -18,3 +18,4 @@ yunpanjiaoben/
 *.log
 auth-login*
 src/types/ipc.js
+site/downloads/*.zip

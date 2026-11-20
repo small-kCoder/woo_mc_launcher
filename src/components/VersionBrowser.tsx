@@ -27,19 +27,6 @@ const FILTER_OPTIONS = [
   { value: 'all' as const, label: '全部' }
 ];
 
-/** 下载源：官方 / 通道1 / 通道2 */
-const SOURCE_OPTIONS = [
-  { value: 'official' as const, label: '官方' },
-  { value: 'channel1' as const, label: '通道1' },
-  { value: 'channel2' as const, label: '通道2' }
-];
-
-const DOWNLOAD_SOURCE_LABEL: Record<DownloadSource, string> = {
-  official: '官方',
-  channel1: '通道1',
-  channel2: '通道2'
-};
-
 const IDLE_INSTALL: InstallStatusState = {
   status: 'idle',
   percent: 0,
@@ -80,8 +67,9 @@ export default function VersionBrowser({
 }: VersionBrowserProps): JSX.Element {
   const { config, setSelectedVersion } = useLauncher();
   const [kind, setKind] = useState<ManifestKind>('release');
-  /** 下载源：下载页默认官方，切换页面重新挂载后仍回到官方 */
-  const [source, setSource] = useState<DownloadSource>('official');
+  // [原代码]: const [source, setSource] = useState<DownloadSource>('official');
+  /** 服务端版本镜像已下线，固定使用 Mojang 官方源 */
+  const source: DownloadSource = 'official';
   const [manifest, setManifest] = useState<ManifestVersion[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -314,10 +302,7 @@ export default function VersionBrowser({
     }
     return (
       <span className="text-3" style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-xs)' }}>
-        仅支持 1.7.10 及以后的原版版本，
-        {source === 'official'
-          ? '资源来自 Mojang 官方源'
-          : `${DOWNLOAD_SOURCE_LABEL[source]}提供清单/版本 JSON/client.jar，依赖库与资源仍来自 Mojang`}
+        仅支持 1.7.10 及以后的原版版本，资源来自 Mojang 官方源
       </span>
     );
   };
@@ -389,7 +374,7 @@ export default function VersionBrowser({
 
   return (
     <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', ...style }}>
-      {/* 筛选、下载源与刷新 */}
+      {/* 筛选与刷新 */}
       <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', rowGap: 8, marginBottom: 8 }}>
         <SegmentedControl
           options={FILTER_OPTIONS}
@@ -400,22 +385,6 @@ export default function VersionBrowser({
           ariaLabel="版本类型筛选"
           disabled={installing}
         />
-        {variant === 'page' && (
-          <>
-            <span className="text-3" style={{ flex: 'none', fontSize: 'var(--fs-xs)' }}>
-              下载源
-            </span>
-            <SegmentedControl
-              options={SOURCE_OPTIONS}
-              value={source}
-              onChange={(next) => setSource(next)}
-              width={210}
-              height={32}
-              ariaLabel="下载源选择"
-              disabled={installing}
-            />
-          </>
-        )}
         <button
           type="button"
           className="focus-ring"

@@ -24,10 +24,13 @@ function isAccountMode(value: unknown): value is AccountMode {
   return value === 'offline' || value === 'microsoft';
 }
 
-/** 默认通道地址：1 = Cloudflare 免费入口，2 = 第三方 FRP 入口 */
+/** 默认通道地址：通道1 = Cloudflare 免费入口；通道2 已停用 */
 const DEFAULT_CHANNEL1_URL = 'https://www.k-cloud.cc.cd';
 // [原代码]: const DEFAULT_CHANNEL2_URL = 'http://127.0.0.1:8080';
-const DEFAULT_CHANNEL2_URL = 'http://uk.frp.one:64731';
+// [原代码]: const DEFAULT_CHANNEL2_URL = 'http://uk.frp.one:64731';
+const DEFAULT_CHANNEL2_URL = '';
+/** 已停用的第三方 FRP 通道，读取旧配置时清空 */
+const RETIRED_CHANNEL2_URL = 'http://uk.frp.one:64731';
 
 function readChannelUrl(raw: unknown, fallback: string): string {
   // 显式留空表示该通道未配置
@@ -85,10 +88,9 @@ function mergeConfig(raw: unknown): AppConfig {
     typeof raw.modsIsolated === 'boolean' ? raw.modsIsolated : base.modsIsolated;
   // 迁移旧版 serverUrl：作为通道2（本地）地址；通道1固定为 Cloudflare 入口
   const channel1Url = readChannelUrl(raw.channel1Url, DEFAULT_CHANNEL1_URL);
-  const channel2Url = readChannelUrl(
-    raw.channel2Url,
-    readChannelUrl(raw.serverUrl, DEFAULT_CHANNEL2_URL)
-  );
+  // [原代码]: const channel2Url = readChannelUrl(raw.channel2Url, readChannelUrl(raw.serverUrl, DEFAULT_CHANNEL2_URL));
+  const channel2Candidate = readChannelUrl(raw.channel2Url, readChannelUrl(raw.serverUrl, DEFAULT_CHANNEL2_URL));
+  const channel2Url = channel2Candidate === RETIRED_CHANNEL2_URL ? '' : channel2Candidate;
   const serverChannel: AppConfig['serverChannel'] =
     raw.serverChannel === 'channel2' ? 'channel2' : 'channel1';
   return {

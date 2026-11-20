@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WOO 我的世界启动器 — 轻量、便携、支持 Fabric 与 P2P 联机</title>
+    <meta
+      name="description"
+      content="WOO 我的世界启动器：便携免安装，内置 Java 与 P2P 联机，支持 Fabric 在线安装、在线模组搜索与更新检测。"
+    />
+    <link rel="icon" href="./icon.png" type="image/png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="#top" aria-label="WOO 我的世界启动器首页">
+          <img class="brand-mark" src="./icon.png" width="28" height="28" alt="" aria-hidden="true" />
+          <span class="brand-text">WOO 我的世界启动器</span>
+        </a>
+
+        <nav class="nav" aria-label="站点导航">
+          <a href="#features">功能</a>
+          <a href="#download">下载</a>
+          <a href="#changelog">更新日志</a>
+          <a href="#faq">常见问题</a>
+          <a class="nav-github" href="https://github.com/small-kCoder/woo_mc_launcher" target="_blank" rel="noreferrer noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="shell hero-inner">
+          <p class="eyebrow">Windows x64 · 便携免安装</p>
+          <h1>把 Minecraft 启动这件小事，做得干净一点。</h1>
+          <p class="lede">
+            内置 Java 运行时，下载、补全、启动一步到位；支持 Fabric 在线安装、在线模组搜索与更新，
+            以及不消耗服务器流量的 P2P 联机。
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://gitee.com/small-kCoding/woo_mc_launcher/releases/download/v1.2.3/WOO-MC-Launcher-1.2.3-Setup.exe">
+              下载安装包
+              <span class="btn-version">v1.2.3</span>
+            </a>
+            <a class="btn btn-ghost" href="#features">查看功能</a>
+          </div>
+
+          <dl class="hero-meta">
+            <div>
+              <dt>系统</dt>
+              <dd>Windows 10 / 11 · x64</dd>
+            </div>
+            <div>
+              <dt>体积</dt>
+              <dd>约 173 MB（含 Java）</dd>
+            </div>
+            <div>
+              <dt>许可</dt>
+              <dd>GitHub 开源</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="preview-section" aria-label="界面预览">
+        <div class="shell">
+          <figure class="preview">
+            <img
+              class="preview-shot"
+              src="./launcher.png"
+              width="1770"
+              height="960"
+              alt="WOO 我的世界启动器主界面：左侧账户与导航，中栏账户、启动按钮与版本选择，右侧资源监视与联机面板"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>真实界面：三栏布局、液态玻璃面板、右侧资源监控与联机入口</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="shell">
+          <header class="section-head">
+            <h2>功能</h2>
+            <p>围绕“装得上、跑得动、联得到”设计，不堆无用开关。</p>
+          </header>
+
+          <div class="grid">
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M5 21h14" /></svg>
+              </span>
+              <h3>便携运行，自带 Java</h3>
+              <p>解压即用，内置 Java 27 运行时。首次启动自动创建游戏目录、配置与日志，不写注册表。</p>
+            </article>
+
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16" /><path d="M5 8h14" /><path d="M7 8v8a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V8" /></svg>
+              </span>
+              <h3>多源下载与原版补全</h3>
+              <p>官方源与两条备用通道可选，支持断点续传、SHA1 校验与实时下载速度显示。</p>
+            </article>
+
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h10" /></svg>
+              </span>
+              <h3>Fabric 在线安装</h3>
+              <p>选择原版与 Loader 版本即可生成继承版本，与原版共用 jar 与资源，不重复占用磁盘。</p>
+            </article>
+
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path d="M8 12h8" /><path d="M12 8v8" /></svg>
+              </span>
+              <h3>在线模组与一键依赖</h3>
+              <p>搜索 Modrinth 直接安装，自动匹配当前版本与 Fabric；缺失前置一键补齐，并支持更新检测。</p>
+            </article>
+
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 3v3" /><path d="M12 18v3" /><path d="M3 12h3" /><path d="M18 12h3" /><path d="m5.6 5.6 2.1 2.1" /><path d="m16.3 16.3 2.1 2.1" /><path d="m18.4 5.6-2.1 2.1" /><path d="m7.7 16.3-2.1 2.1" /></svg>
+              </span>
+              <h3>P2P 联机</h3>
+              <p>房主填写并监测局域网端口，好友用 6 位房间号加入；游戏流量走点对点直连，不占服务器带宽。</p>
+            </article>
+
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9" /><path d="M10 19V5" /><path d="M16 19v-7" /><path d="M22 19H2" /></svg>
+              </span>
+              <h3>资源监视与内存优化</h3>
+              <p>实时显示 CPU 与内存占用；启动前整理系统工作集，减少后台占用，全程不请求提权。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="download">
+        <div class="shell download-inner">
+          <div class="download-copy">
+            <h2>下载</h2>
+            <p class="download-lede">当前版本 <strong>v1.2.3</strong>，更换全新启动器图标，建议更新。</p>
+
+            <div class="download-actions">
+              <a class="btn btn-primary" href="https://gitee.com/small-kCoding/woo_mc_launcher/releases/download/v1.2.3/WOO-MC-Launcher-1.2.3-Setup.exe">
+                图形安装包（推荐）
+              </a>
+              <a class="btn btn-ghost" href="https://gitee.com/small-kCoding/woo_mc_launcher/releases/download/v1.2.3/WOO-MC-Launcher-1.2.3-win-x64-part1.zip">
+                分卷 1（97 MB）
+              </a>
+              <a class="btn btn-ghost" href="https://gitee.com/small-kCoding/woo_mc_launcher/releases/download/v1.2.3/WOO-MC-Launcher-1.2.3-win-x64-part2.zip">
+                分卷 2（77 MB）
+              </a>
+            </div>
+
+            <p class="download-note">
+              安装包约 420 KB，运行后从 Gitee 下载约 173 MB 的程序文件，安装向导会显示下载进度和速度，自动创建桌面与开始菜单快捷方式。也可以手动下载两个分卷，解压到同一目录。SHA256 part1：<code>68a48713f641530b8ee25d9e882796d491f698b23b1a9ef31ca051e5e23c5a00</code>；part2：<code>f0bf00cbf69ae3e1c2c928e2993a546167ca1089f1c84eb14c79deadc2382ce2</code>
+            </p>
+
+            <ol class="steps">
+              <li>运行 <code>WOO-MC-Launcher-1.2.3-Setup.exe</code>，按向导选择安装目录（默认安装到当前用户目录，不需要管理员权限）。</li>
+              <li>等待下载和解压完成，安装程序会自动创建桌面和开始菜单快捷方式。</li>
+              <li>在下载页选择版本安装；需要模组时先安装 Fabric，再到模组页导入或在线下载。</li>
+            </ol>
+          </div>
+
+          <aside class="spec-card">
+            <h3>运行要求</h3>
+            <dl>
+              <dt>系统</dt><dd>Windows 10 / 11（x64）</dd>
+              <dt>Java</dt><dd>内置 27.0.1，可另选本地 Java</dd>
+              <dt>磁盘</dt><dd>启动器约 470 MB，游戏另计</dd>
+              <dt>网络</dt><dd>下载与在线模组需要联网</dd>
+            </dl>
+            <p class="spec-tip">
+              发行包未做代码签名，首次运行若出现 SmartScreen 提示，选择“更多信息 → 仍要运行”。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="changelog">
+        <div class="shell">
+          <header class="section-head">
+            <h2>更新日志</h2>
+            <p>只记录用户可感知的变化。</p>
+          </header>
+
+          <ol class="timeline">
+            <li>
+              <div class="timeline-meta"><span class="tag tag-current">最新</span><time>v1.2.3</time></div>
+              <h3>启动器图标</h3>
+              <ul>
+                <li>更换全新的启动器图标，窗口与安装包图标同步更新</li>
+              </ul>
+            </li>
+            <li>
+              <div class="timeline-meta"><time>v1.2.2</time></div>
+              <h3>页面切换修复</h3>
+              <ul>
+                <li>切换导航后中栏偶尔停留在上一页或空白的问题已修复</li>
+                <li>下载页切换下载源、选择版本后返回启动页正常</li>
+              </ul>
+            </li>
+            <li>
+              <div class="timeline-meta"><time>v1.2.1</time></div>
+              <h3>依赖误报修复</h3>
+              <ul>
+                <li>识别模组内置的嵌套前置，Xaero's Minimap 等不再误报缺失</li>
+                <li>一键安装失败时在详情内显示具体原因</li>
+              </ul>
+            </li>
+            <li>
+              <div class="timeline-meta"><time>v1.2</time></div>
+              <h3>在线模组</h3>
+              <ul>
+                <li>新增在线模组搜索与安装，自动匹配当前版本与 Fabric</li>
+                <li>新增可更新检测，一键更新并保留启用状态</li>
+                <li>安装同 id 模组时自动清理旧版本文件</li>
+              </ul>
+            </li>
+            <li>
+              <div class="timeline-meta"><time>v1.1</time></div>
+              <h3>Fabric 与模组管理</h3>
+              <ul>
+                <li>下载页可在线安装 Fabric，与原版共用文件</li>
+                <li>模组启用/禁用、回收站删除、拖拽导入与详情</li>
+                <li>新增按版本隔离开关</li>
+              </ul>
+            </li>
+            <li>
+              <div class="timeline-meta"><time>v1.0.0</time></div>
+              <h3>首个版本</h3>
+              <ul>
+                <li>原版下载与启动、离线与微软账户登录</li>
+                <li>P2P 联机、资源监视与启动前内存优化</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="faq">
+        <div class="shell">
+          <header class="section-head">
+            <h2>常见问题</h2>
+            <p>遇到问题先看这里，仍有疑问可在 GitHub 提 Issue。</p>
+          </header>
+
+          <div class="faq">
+            <details>
+              <summary>需要单独安装 Java 吗？</summary>
+              <p>不需要。发行包内含 Java 27 运行时；也可以在设置中手动选择本地 Java。</p>
+            </details>
+            <details>
+              <summary>为什么模组装了却不生效？</summary>
+              <p>模组需要 Fabric 加载器。请先在下载页安装 Fabric 版本，再启动该 Fabric 版本；原版版本不会加载模组。</p>
+            </details>
+            <details>
+              <summary>提示缺少依赖怎么办？</summary>
+              <p>在模组详情里点“一键安装缺失依赖”，会从 Modrinth 自动匹配兼容版本并安装前置；部分模组已内置前置，不会再误报。</p>
+            </details>
+            <details>
+              <summary>联机需要服务器吗？</summary>
+              <p>游戏流量走 P2P 直连，不需要中继服务器；服务器只保存房间号与网络参数，用于双方配对。</p>
+            </details>
+            <details>
+              <summary>为什么下载速度不稳定？</summary>
+              <p>可在下载页切换下载源。备用通道适合官方源不稳定时使用，依赖库与资源仍从官方地址获取。</p>
+            </details>
+            <details>
+              <summary>支持 macOS 或 Linux 吗？</summary>
+              <p>目前只提供 Windows x64 版本。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <div class="footer-brand">
+          <img class="brand-mark" src="./icon.png" width="28" height="28" alt="" aria-hidden="true" />
+          <div>
+            <p class="footer-title">WOO 我的世界启动器</p>
+            <p class="footer-sub">非官方项目，与 Mojang 及 Microsoft 无关联。</p>
+          </div>
+        </div>
+        <nav class="footer-links" aria-label="页脚链接">
+          <a href="https://github.com/small-kCoder/woo_mc_launcher" target="_blank" rel="noreferrer noopener">源码</a>
+          <a href="https://github.com/small-kCoder/woo_mc_launcher/releases" target="_blank" rel="noreferrer noopener">版本发布</a>
+          <a href="https://github.com/small-kCoder/woo_mc_launcher/issues" target="_blank" rel="noreferrer noopener">问题反馈</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

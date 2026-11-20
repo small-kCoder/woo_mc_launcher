@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Layers, Search } from 'lucide-react';
 import Dialog from './Dialog';
 import ProgressBar from './ProgressBar';
-import SegmentedControl from './SegmentedControl';
 import { useLauncher } from '../lib/useLauncher';
 import { showToast } from '../lib/toast';
 import { formatSpeed } from '../lib/format';
@@ -13,12 +12,6 @@ import type {
   InstallProgress,
   ManifestVersion
 } from '../types/ipc';
-
-const SOURCE_OPTIONS = [
-  { value: 'official' as const, label: '官方' },
-  { value: 'channel1' as const, label: '通道1' },
-  { value: 'channel2' as const, label: '通道2' }
-];
 
 type InstallStatus = 'idle' | 'installing' | 'done' | 'failed' | 'cancelled';
 
@@ -243,7 +236,9 @@ export default function FabricInstallDialog({ open, onClose }: FabricInstallDial
   const [manifestError, setManifestError] = useState('');
   const [manifestLoading, setManifestLoading] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
-  const [source, setSource] = useState<DownloadSource>('official');
+  // [原代码]: const [source, setSource] = useState<DownloadSource>('official');
+  /** 服务端版本镜像已下线，固定使用 Mojang 官方源 */
+  const source: DownloadSource = 'official';
   const [mcVersion, setMcVersion] = useState('');
   const [loaders, setLoaders] = useState<FabricLoaderInfo[] | null>(null);
   const [loaderError, setLoaderError] = useState('');
@@ -265,7 +260,7 @@ export default function FabricInstallDialog({ open, onClose }: FabricInstallDial
     setLoaderError('');
   }, [open]);
 
-  // 版本清单：跟随下载源刷新；默认选中当前版本的基版本或最新正式版
+  // 加载版本清单：默认选中当前版本的基版本或最新正式版
   useEffect(() => {
     if (!open || install.status === 'installing') {
       return;
@@ -480,21 +475,6 @@ export default function FabricInstallDialog({ open, onClose }: FabricInstallDial
               searchPlaceholder="搜索 Loader 版本"
               onChange={setLoaderVersion}
             />
-
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--fs-xs)', color: 'var(--text-2)' }}>
-                原版下载源
-              </label>
-              <div style={{ marginTop: 6 }}>
-                <SegmentedControl
-                  options={SOURCE_OPTIONS}
-                  value={source}
-                  onChange={setSource}
-                  width="100%"
-                  ariaLabel="原版下载源"
-                />
-              </div>
-            </div>
           </div>
 
           {(manifestError || loaderError || install.error) && (
